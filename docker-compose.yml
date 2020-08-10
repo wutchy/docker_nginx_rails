@@ -1,0 +1,49 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - db-data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+      MYSQL_ROOT_PASSWORD: test_password
+    ports:
+      - "13306:3306"
+
+  rails:
+    build:
+      context: .
+    command: /bin/bash
+    environment:
+      EDITOR: "emacs"
+    volumes:
+      - .:/work/hp
+      - public-data:/work/hp/public
+      - tmp-data:/work/hp/tmp
+      - log-data:/work/hp/log
+    depends_on:
+      - mysql
+    tty: true
+
+  nginx:
+    build:
+      context: ./nginx
+    volumes:
+      - public-data:/work/hp/public
+      - tmp-data:/work/hp/tmp
+    command: /bin/bash
+    environment:
+      EDITOR: "emacs"
+    ports:
+      - "8080:80"
+    tty: true
+    depends_on:
+      - rails
+
+volumes:
+  public-data:
+  tmp-data:
+  log-data:
+  db-data:
